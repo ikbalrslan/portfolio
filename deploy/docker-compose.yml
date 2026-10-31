@@ -13,11 +13,11 @@ services:
       retries: 3
       start_period: 15s
     networks:
-      - caddy
+      - proxy
 
-# Join the network of the existing Caddy reverse proxy (optifyseo-deploy),
+# Join the shared reverse-proxy network (Caddy in ~/proxy on the VPS),
 # so Caddy can reach this container as "portfolio:3000".
 networks:
-  caddy:
-    name: optifyseo-deploy_default
+  proxy:
+    name: proxy
     external: true
