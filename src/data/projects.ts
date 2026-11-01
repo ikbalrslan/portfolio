@@ -69,12 +69,12 @@ export const projects: Project[] = [
   {
     slug: "github-io",
     title: "ikbalrslan.github.io",
-    blurb: "An earlier version of my personal portfolio site.",
+    blurb: "An earlier version of my personal portfolio site, built with Django.",
     year: 2023,
     category: "Web",
     url: "https://github.com/ikbalrslan/ikbalrslan.github.io",
     repo: "https://github.com/ikbalrslan/ikbalrslan.github.io",
-    tech: ["Python"],
+    tech: ["Python", "Django"],
   },
   {
     slug: "socialmedia",
@@ -122,12 +122,13 @@ export const projects: Project[] = [
   {
     slug: "real-estate-price-estimation",
     title: "Real Estate Price Estimation",
-    blurb: "Course project that estimates real estate prices with machine learning, ending in a hybrid model.",
+    blurb:
+      "Course project that estimates real estate prices from listing data and room photos, ending in a hybrid neural network and CNN model.",
     year: 2020,
     category: "Machine learning",
     url: "https://github.com/ikbalrslan/Price-estimation-for-real-estates",
     repo: "https://github.com/ikbalrslan/Price-estimation-for-real-estates",
-    tech: ["Machine learning"],
+    tech: ["Python", "Neural networks", "CNN"],
   },
   {
     slug: "flower-classification",
