@@ -141,16 +141,6 @@ export const projects: Project[] = [
     tech: ["Python", "Jupyter"],
   },
   {
-    slug: "book-recommendation",
-    title: "Book Recommendation System",
-    blurb: "Early-stage book recommendation system project.",
-    year: 2020,
-    category: "Machine learning",
-    url: "https://github.com/ikbalrslan/Book-recommendation-system",
-    repo: "https://github.com/ikbalrslan/Book-recommendation-system",
-    tech: [],
-  },
-  {
     slug: "blockchain-smart-contract",
     title: "Shared Taxi Smart Contract",
     blurb: "Solidity smart contract for a shared taxi business, handling ticket payments, driver salaries and profit sharing.",
