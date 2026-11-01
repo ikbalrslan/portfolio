@@ -48,10 +48,12 @@ rollback() {
 
 # Remove old portfolio images, keeping the live and previous tag of every environment.
 prune() {
-  local keep tag
-  keep=$(cat ~/portfolio-deploy/.env ~/portfolio-deploy/.env.previous \
-             ~/portfolio-acceptance/.env ~/portfolio-acceptance/.env.previous 2>/dev/null \
-         | sed -n 's/^IMAGE_TAG=//p' | sort -u)
+  local keep="" f tag
+  # Any of these may not exist yet (e.g. the first deploy of an environment).
+  for f in ~/portfolio-deploy/.env ~/portfolio-deploy/.env.previous \
+           ~/portfolio-acceptance/.env ~/portfolio-acceptance/.env.previous; do
+    [ -f "$f" ] && keep+="$(current_tag "$f")"$'\n'
+  done
   docker image ls ghcr.io/ikbalrslan/portfolio --format '{{.Tag}}' | while read -r tag; do
     grep -qx "$tag" <<<"$keep" || docker image rm "ghcr.io/ikbalrslan/portfolio:$tag" >/dev/null 2>&1 || true
   done
@@ -66,7 +68,8 @@ case $cmd in
     prev=$(current_tag .env); prev=${prev:-latest}
     if [ -n "$prev" ] && [ "$prev" != "$tag" ]; then echo "IMAGE_TAG=$prev" > .env.previous; fi
     if start "$tag"; then
-      prune
+      # Cleanup must never fail a deploy that already succeeded.
+      prune || echo "::warning::image cleanup failed"
       echo "Deployed $service at $tag"
     else
       rollback || true
