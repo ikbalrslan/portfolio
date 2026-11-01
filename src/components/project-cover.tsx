@@ -8,8 +8,14 @@ function hueFor(slug: string): number {
   return h;
 }
 
+// Connector words are skipped so "Detection of Fake News" becomes "DF", not "DO".
+const minorWords = new Set(["of", "the", "and", "for", "a", "an", "in", "on", "to"]);
+
 function monogram(title: string): string {
-  const words = title.replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
+  const words = title
+    .replace(/[^A-Za-z0-9 ]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w && !minorWords.has(w.toLowerCase()));
   if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
   return title.slice(0, 2).toUpperCase();
 }
