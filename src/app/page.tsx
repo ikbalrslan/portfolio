@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ProjectCard } from "@/components/project-card";
-import { ArrowIcon } from "@/components/icons";
+import { ArrowIcon, GitHubIcon, LinkedInIcon, MailIcon } from "@/components/icons";
 import { featuredProjects, projects } from "@/data/projects";
 import { site } from "@/data/site";
 
@@ -25,6 +25,12 @@ function Section({
     </section>
   );
 }
+
+const contacts = [
+  { label: "Email", href: `mailto:${site.email}`, text: site.email, Icon: MailIcon, external: false },
+  { label: "LinkedIn", href: site.linkedin, text: `in/${site.linkedinHandle}`, Icon: LinkedInIcon, external: true },
+  { label: "GitHub", href: site.github, text: `github.com/${site.githubHandle}`, Icon: GitHubIcon, external: true },
+];
 
 export default function Home() {
   return (
@@ -66,25 +72,25 @@ export default function Home() {
           Open to interesting work and collaboration. The quickest way to reach me is email, and
           most of my code lives on GitHub.
         </p>
-        <dl className="mt-6 grid max-w-md grid-cols-[5rem_1fr] gap-y-3 text-sm">
-          <dt className="eyebrow self-center">Email</dt>
-          <dd className="min-w-0 truncate">
-            <a href={`mailto:${site.email}`} className="text-ink underline-offset-4 hover:underline">
-              {site.email}
-            </a>
-          </dd>
-          <dt className="eyebrow self-center">GitHub</dt>
-          <dd className="min-w-0 truncate">
-            <a
-              href={site.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-ink underline-offset-4 hover:underline"
-            >
-              github.com/{site.githubHandle}
-            </a>
-          </dd>
-        </dl>
+        <ul className="mt-6 flex flex-col gap-3 text-sm">
+          {contacts.map((c) => (
+            <li key={c.label}>
+              <a
+                href={c.href}
+                className="group inline-flex min-w-0 max-w-full items-center gap-3 text-ink"
+                {...(c.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors group-hover:border-accent group-hover:text-accent">
+                  <c.Icon />
+                </span>
+                <span className="min-w-0">
+                  <span className="eyebrow block">{c.label}</span>
+                  <span className="block truncate underline-offset-4 group-hover:underline">{c.text}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
       </Section>
     </>
   );

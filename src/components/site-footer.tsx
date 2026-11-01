@@ -2,6 +2,7 @@ import { site } from "@/data/site";
 
 const socials = [
   { label: "GitHub", href: site.github },
+  { label: "LinkedIn", href: site.linkedin },
   { label: "Email", href: `mailto:${site.email}` },
 ];
 
