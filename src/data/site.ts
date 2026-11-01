@@ -6,6 +6,7 @@ export const site = {
     "Software engineer building web products and backend systems. Projects, experiments and contact details.",
   github: "https://github.com/ikbalrslan",
   githubHandle: "ikbalrslan",
-  // Placeholder: replace with your real address.
-  email: "hello@ikbalarslan.dev",
+  linkedin: "https://www.linkedin.com/in/ikbalarslan/",
+  linkedinHandle: "ikbalarslan",
+  email: "ikbalxarslan@gmail.com",
 } as const;
