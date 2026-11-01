@@ -43,6 +43,7 @@ export const projects: Project[] = [
     repo: "https://github.com/ikbalrslan/optify-seo-ai",
     tech: ["TypeScript"],
     featured: true,
+    image: "/projects/optify.webp",
   },
   {
     slug: "fdg",
