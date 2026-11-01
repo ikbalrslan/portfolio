@@ -1,0 +1,182 @@
+name: Pipeline
+
+# PR      → checks → build → deploy to acceptance → QA (Playwright)
+# main    → checks → build → deploy to acceptance → QA → deploy the same image
+#           to production → smoke test → automatic rollback if smoke fails
+#
+# Acceptance is a single shared environment, so acceptance jobs queue behind
+# each other instead of overwriting a deploy that is still being tested.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+  TAG: sha-${{ github.sha }}
+  ACCEPTANCE_URL: https://acceptance.ikbalarslan.dev
+  PRODUCTION_URL: https://ikbalarslan.dev
+
+jobs:
+  checks:
+    name: Lint & typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+
+  build:
+    name: Build image
+    needs: checks
+    # Fork PRs get no secrets and must not deploy to the VPS.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: APP_VERSION=${{ github.sha }}
+          tags: ${{ env.IMAGE }}:${{ env.TAG }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  acceptance:
+    name: Acceptance QA
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: acceptance
+      url: ${{ env.ACCEPTANCE_URL }}
+    concurrency:
+      group: acceptance
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to acceptance
+        uses: ./.github/actions/deploy
+        with:
+          ssh-key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          user: ${{ secrets.VPS_USER }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+          compose-file: deploy/acceptance.yml
+          dir: portfolio-acceptance
+          service: portfolio-acceptance
+          tag: ${{ env.TAG }}
+          url: ${{ env.ACCEPTANCE_URL }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: QA tests (all)
+        run: npx playwright test
+        env:
+          BASE_URL: ${{ env.ACCEPTANCE_URL }}
+
+      - name: Upload QA report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-report-acceptance-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  production:
+    name: Deploy production
+    needs: acceptance
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ env.PRODUCTION_URL }}
+    concurrency:
+      group: production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same image (same tag/digest) that just passed acceptance QA.
+      - name: Deploy to production
+        id: deploy
+        uses: ./.github/actions/deploy
+        with:
+          ssh-key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          user: ${{ secrets.VPS_USER }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+          compose-file: deploy/production.yml
+          dir: portfolio-deploy
+          service: portfolio
+          tag: ${{ env.TAG }}
+          url: ${{ env.PRODUCTION_URL }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Smoke tests
+        run: npx playwright test --grep @smoke
+        env:
+          BASE_URL: ${{ env.PRODUCTION_URL }}
+
+      - name: Roll back production
+        if: failure() && steps.deploy.outcome == 'success'
+        run: |
+          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "bash ~/portfolio-deploy/remote-deploy.sh rollback ~/portfolio-deploy portfolio"
+
+      - name: Upload smoke report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-report-production-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
