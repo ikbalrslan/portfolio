@@ -1,6 +1,9 @@
+# Production: https://ikbalarslan.dev
+# Copied to ~/portfolio-deploy/docker-compose.yml on the VPS by the pipeline.
+# IMAGE_TAG comes from ~/portfolio-deploy/.env, written by remote-deploy.sh.
 services:
   portfolio:
-    image: ghcr.io/ikbalrslan/portfolio:latest
+    image: ghcr.io/ikbalrslan/portfolio:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -11,12 +14,13 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 30s
+      start_interval: 2s
     networks:
       - proxy
 
-# Join the shared reverse-proxy network (Caddy in ~/proxy on the VPS),
-# so Caddy can reach this container as "portfolio:3000".
+# Shared reverse-proxy network (Caddy in ~/proxy). Caddy reaches this
+# container by its service name: portfolio:3000.
 networks:
   proxy:
     name: proxy
