@@ -54,8 +54,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
       <body className="flex min-h-dvh flex-col font-sans">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:text-sm focus:text-bg"
+        >
+          Skip to content
+        </a>
         <SiteHeader />
-        <main className="flex-1 px-4 sm:px-5 md:px-10">
+        <main id="main" className="flex-1 px-4 sm:px-5 md:px-10">
           <div className="mx-auto max-w-[var(--frame)] border-x border-line">
             {children}
           </div>
