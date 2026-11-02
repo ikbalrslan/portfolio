@@ -1,0 +1,26 @@
+# Acceptance: https://acceptance.ikbalarslan.dev
+# Every PR (and every main build, before production) is deployed here and
+# QA-tested. Copied to ~/portfolio-acceptance/docker-compose.yml on the VPS.
+services:
+  portfolio-acceptance:
+    image: ghcr.io/ikbalrslan/portfolio:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 2s
+    networks:
+      - proxy
+
+# Caddy reaches this container as portfolio-acceptance:3000.
+networks:
+  proxy:
+    name: proxy
+    external: true

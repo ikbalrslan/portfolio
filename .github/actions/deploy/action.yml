@@ -1,0 +1,75 @@
+name: Deploy to VPS
+description: >
+  Copies the compose file and deploy script to the VPS, deploys one image tag,
+  then waits until the public URL serves that exact build.
+
+inputs:
+  ssh-key: { required: true, description: Private key for the VPS user }
+  host: { required: true, description: VPS host }
+  user: { required: true, description: VPS user }
+  registry-token: { required: true, description: Token to pull from ghcr.io }
+  compose-file: { required: true, description: Compose file in this repo }
+  dir: { required: true, description: Directory under ~ on the VPS }
+  service: { required: true, description: Compose service name }
+  tag: { required: true, description: Image tag to deploy }
+  url: { required: true, description: Public URL of the environment }
+
+runs:
+  using: composite
+  steps:
+    - name: Check deploy secrets
+      shell: bash
+      env:
+        KEY: ${{ inputs.ssh-key }}
+        HOST: ${{ inputs.host }}
+        USR: ${{ inputs.user }}
+      run: |
+        if [ -z "$KEY" ] || [ -z "$HOST" ] || [ -z "$USR" ]; then
+          echo "::error::VPS_HOST, VPS_USER and VPS_SSH_KEY secrets must be set to deploy."
+          exit 1
+        fi
+
+    - uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ inputs.ssh-key }}
+
+    - name: Trust VPS host key
+      shell: bash
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H "${{ inputs.host }}" >> ~/.ssh/known_hosts
+
+    - name: Copy deploy files
+      shell: bash
+      run: |
+        target="${{ inputs.user }}@${{ inputs.host }}"
+        ssh "$target" "mkdir -p ~/${{ inputs.dir }}"
+        scp "${{ inputs.compose-file }}" "$target:~/${{ inputs.dir }}/docker-compose.yml"
+        scp deploy/remote-deploy.sh "$target:~/${{ inputs.dir }}/remote-deploy.sh"
+
+    - name: Deploy
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.registry-token }}
+        GH_ACTOR: ${{ github.actor }}
+      run: |
+        ssh "${{ inputs.user }}@${{ inputs.host }}" \
+          "GH_TOKEN='$GH_TOKEN' GH_ACTOR='$GH_ACTOR' bash -s" <<'EOF'
+          set -e
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+        EOF
+        ssh "${{ inputs.user }}@${{ inputs.host }}" \
+          "bash ~/${{ inputs.dir }}/remote-deploy.sh deploy ~/${{ inputs.dir }} ${{ inputs.service }} ${{ inputs.tag }}"
+
+    - name: Wait for the public URL to serve this build
+      shell: bash
+      run: |
+        want="${{ github.sha }}"
+        for i in $(seq 1 30); do
+          got=$(curl -fsS --max-time 10 "${{ inputs.url }}/api/health" | jq -r .version || true)
+          if [ "$got" = "$want" ]; then echo "${{ inputs.url }} serves $want"; exit 0; fi
+          echo "waiting ($i): serving '${got:-nothing}'"
+          sleep 5
+        done
+        echo "::error::${{ inputs.url }} does not serve $want"
+        exit 1
