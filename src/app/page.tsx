@@ -36,16 +36,21 @@ export default function Home() {
   return (
     <>
       <header className="px-6 py-16 md:px-10 md:py-24">
-        <p className="eyebrow">Software engineer</p>
+        <p className="eyebrow">{site.role}</p>
         <h1 className="t-display mt-4">{site.name}</h1>
         <p className="mt-5 max-w-[62ch] leading-7 text-muted">
-          I build web products and the backend systems behind them, mostly with TypeScript and
-          Java. Lately that means Optify, an AI-assisted SEO platform, and tools for monitoring
-          production lines. Earlier work spans Spring Boot services and machine learning projects.
+          I lead a software team at a large high-tech company in the Netherlands, where
+          we&apos;re redesigning a microservices platform and getting it ready for the cloud.
+          Before that I built defense simulators and worked on a consumer platform used by
+          millions of people, mostly with Java, Python and TypeScript. Lately I&apos;ve also been
+          putting AI agents to work in our CI pipeline.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/projects" className="btn btn-solid">
             View projects
+          </Link>
+          <Link href="/about" className="btn btn-outline">
+            More about me
           </Link>
           <a href="#contact" className="btn btn-outline">
             Get in touch

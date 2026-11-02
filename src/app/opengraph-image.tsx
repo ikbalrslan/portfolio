@@ -30,14 +30,14 @@ export default function Image() {
             color: "#e9875a",
           }}
         >
-          Software engineer
+          {site.role}
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", fontSize: 110, letterSpacing: "-0.03em", lineHeight: 1 }}>
             {site.name}
           </div>
           <div style={{ display: "flex", marginTop: 32, fontSize: 36, color: "#a69e95", maxWidth: 1000 }}>
-            Web products and the backend systems behind them.
+            8+ years across back-end, front-end and platform engineering.
           </div>
         </div>
         <div style={{ display: "flex", fontSize: 28, color: "#7f776f" }}>

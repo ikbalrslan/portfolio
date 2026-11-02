@@ -4,7 +4,7 @@ import { test, expect, NOT_FOUND_PATH } from "./fixtures";
  * Crawls every page and checks every link and button, so a new button or link
  * is covered without writing a dedicated test for it.
  */
-const pages = ["/", "/projects", NOT_FOUND_PATH];
+const pages = ["/", "/about", "/projects", NOT_FOUND_PATH];
 
 // These sites block automated requests (LinkedIn answers 999), so only the URL shape is checked.
 const NO_FETCH = [/linkedin\.com/];

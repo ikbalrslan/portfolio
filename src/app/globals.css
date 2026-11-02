@@ -133,6 +133,25 @@ body {
     height: 1px;
     background: var(--text);
   }
+  /* Long-form prose (About page). */
+  .prose-about {
+    max-width: 66ch;
+    line-height: 1.75rem;
+    color: var(--text-body);
+  }
+  .prose-about > * + * {
+    margin-top: 1rem;
+  }
+  .prose-about a:not(.btn) {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--border);
+    transition: text-decoration-color 0.15s ease;
+  }
+  .prose-about a:not(.btn):hover {
+    text-decoration-color: var(--accent);
+  }
   .btn {
     display: inline-flex;
     align-items: center;
