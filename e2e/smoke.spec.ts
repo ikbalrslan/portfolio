@@ -11,7 +11,7 @@ test.describe("@smoke", () => {
     expect(typeof body.version).toBe("string");
   });
 
-  for (const path of ["/", "/projects"]) {
+  for (const path of ["/", "/about", "/projects"]) {
     test(`${path} renders`, async ({ page }) => {
       const res = await page.goto(path);
       expect(res?.status()).toBe(200);

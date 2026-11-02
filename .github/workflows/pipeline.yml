@@ -110,6 +110,7 @@ jobs:
         run: npx playwright test
         env:
           BASE_URL: ${{ env.ACCEPTANCE_URL }}
+          CONFIDENTIAL_TERMS: ${{ secrets.CONFIDENTIAL_TERMS }}
 
       - name: Upload QA report
         if: ${{ !cancelled() }}
@@ -164,6 +165,7 @@ jobs:
         run: npx playwright test --grep @smoke
         env:
           BASE_URL: ${{ env.PRODUCTION_URL }}
+          CONFIDENTIAL_TERMS: ${{ secrets.CONFIDENTIAL_TERMS }}
 
       - name: Roll back production
         if: failure() && steps.deploy.outcome == 'success'

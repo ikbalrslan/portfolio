@@ -6,10 +6,17 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
-test("hero shows name and both buttons", async ({ page }) => {
+test("hero shows name, role and all three buttons", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(site.name);
+  await expect(page.getByText(site.role, { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "View projects" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "More about me" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Get in touch" })).toBeVisible();
+});
+
+test("More about me button opens the About page", async ({ page }) => {
+  await page.getByRole("link", { name: "More about me" }).click();
+  await expect(page).toHaveURL(/\/about$/);
 });
 
 test("View projects button opens the projects page", async ({ page }) => {
